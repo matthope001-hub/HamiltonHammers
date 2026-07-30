@@ -35,7 +35,7 @@ header{
 }
 .brand{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;justify-content:space-between;}
 .brand-name{font-size:26px;font-weight:700;color:var(--ice);display:flex;align-items:center;gap:10px;}
-.brand-icon{flex-shrink:0;}
+.brand-icon{flex-shrink:0;object-fit:contain;border-radius:4px;}
 .brand-name span{color:var(--ember);}
 .brand-sub{font-size:12px;color:var(--ice-dim);letter-spacing:.15em;}
 .board{
@@ -176,16 +176,7 @@ select.assign-select{width:100%;}
 <header>
   <div class="brand">
     <div class="brand-name">
-      <svg class="brand-icon" viewBox="0 0 64 64" width="34" height="34" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <g stroke="var(--ice)" stroke-width="2" stroke-linejoin="round">
-          <rect x="8" y="26" width="20" height="9" rx="1.5" fill="var(--steel-2)" transform="rotate(-45 18 30.5)"/>
-          <rect x="4" y="29.5" width="10" height="14" rx="2" fill="var(--gold)" transform="rotate(-45 9 36.5)"/>
-          <rect x="36" y="26" width="20" height="9" rx="1.5" fill="var(--steel-2)" transform="rotate(45 46 30.5)"/>
-          <rect x="50" y="29.5" width="10" height="14" rx="2" fill="var(--gold)" transform="rotate(45 55 36.5)"/>
-        </g>
-        <circle cx="10" cy="41" r="3.2" fill="var(--ember)"/>
-        <circle cx="54" cy="41" r="3.2" fill="var(--ember)"/>
-      </svg>
+      <img class="brand-icon" src="HamiltonHammers.png" alt="Hamilton Hammers" width="34" height="34">
       HAMILTON <span>HAMMERS</span>
     </div>
     <div class="brand-sub">Off-Ice Officials Scheduling</div>
@@ -887,7 +878,7 @@ function refreshAssignDropdowns(){
 
   selects.forEach(sel=>{
     const pos=sel.dataset.pos;
-    const currentValue = sel.value || sel.dataset.current || '';
+    const currentValue = sel.value;
     const eligible = assignEligibleByPos[pos] || [];
     const filtered = eligible.filter(o=>{
       if(o.id===currentValue) return true;
