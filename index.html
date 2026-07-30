@@ -101,6 +101,11 @@ td.name{color:var(--ice);}
 .avail-names{font-size:13px;color:var(--ice-dim);line-height:1.5;}
 .game-head{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px;margin-bottom:8px;}
 .game-title{font-family:'Oswald',sans-serif;font-size:16px;color:var(--ice);}
+.team-badge{
+  display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;
+  color:#fff;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;letter-spacing:.02em;
+  vertical-align:middle;margin-right:8px;flex-shrink:0;
+}
 .game-date{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--gold);}
 
 input,select{
@@ -431,6 +436,30 @@ function tickCountdown(){
 }
 setInterval(tickCountdown,1000);
 
+const TEAM_COLORS={
+  'Toronto Marlies':{abbr:'TOR',color:'#00285E'},
+  'Rochester Americans':{abbr:'ROC',color:'#003876'},
+  'Syracuse Crunch':{abbr:'SYR',color:'#002868'},
+  'Hartford Wolf Pack':{abbr:'HFD',color:'#0038A8'},
+  'Providence Bruins':{abbr:'PRO',color:'#FFB81C'},
+  'Lehigh Valley Phantoms':{abbr:'LV',color:'#F74902'},
+  'Belleville Senators':{abbr:'BEL',color:'#C52032'},
+  'Laval Rocket':{abbr:'LAV',color:'#AF1E2D'},
+  'Utica Comets':{abbr:'UTI',color:'#CE1126'},
+  'Cleveland Monsters':{abbr:'CLE',color:'#002654'},
+  'Abbotsford Canucks':{abbr:'ABB',color:'#00205B'},
+  'Springfield Thunderbirds':{abbr:'SPR',color:'#003087'},
+  'Grand Rapids Griffins':{abbr:'GR',color:'#CE1126'},
+  'Hershey Bears':{abbr:'HER',color:'#5C3A21'},
+  'Wilkes-Barre Scranton Penguins':{abbr:'WBS',color:'#231F20'}
+};
+function teamBadge(name){
+  if(!name) return '';
+  const t=TEAM_COLORS[name];
+  const color=t?t.color:'#4A5568';
+  const abbr=t?t.abbr:name.split(' ').map(w=>w[0]).join('').slice(0,3).toUpperCase();
+  return `<span class="team-badge" style="background:${color}">${esc(abbr)}</span>`;
+}
 function fmtDate(d){
   const dt=new Date(d+'T00:00:00');
   return dt.toLocaleDateString('en-CA',{weekday:'short',month:'short',day:'numeric'});
@@ -475,7 +504,7 @@ async function renderPublicSchedule(){
       unavailable.sort((a,b)=>a.localeCompare(b));
       inner += `<div class="game-block">
         <div class="game-head">
-          <div class="game-title">vs ${esc(g.opponent||'TBD')}</div>
+          <div class="game-title">${teamBadge(g.opponent)}vs ${esc(g.opponent||'TBD')}</div>
           <div class="game-date mono">${fmtDate(g.date)} · ${g.time||''}</div>
         </div>
         <table><thead><tr><th>Position</th><th>Assigned</th></tr></thead><tbody>
@@ -573,7 +602,7 @@ async function renderAvailGames(){
       if(current) submitted++;
       inner += `<div class="game-block ${current?'':'unanswered'}" data-game="${g.id}">
         <div class="game-head">
-          <div class="game-title">vs ${esc(g.opponent||'TBD')} ${current?'':'<span class="tag no">Not Submitted</span>'}</div>
+          <div class="game-title">${teamBadge(g.opponent)}vs ${esc(g.opponent||'TBD')} ${current?'':'<span class="tag no">Not Submitted</span>'}</div>
           <div class="game-date mono">${fmtDate(g.date)} · ${g.time||''}</div>
         </div>
         <div class="avail-choices">
