@@ -271,6 +271,7 @@ document.getElementById('avail-logout').onclick=()=>{
 };
 
 async function renderMyAssignments(){
+  if(!currentAvailUser) return;
   const el=document.getElementById('my-assignments');
   el.innerHTML='<div class="empty">Loading…</div>';
   const upcoming = sortedGames().filter(g=> new Date(g.date+'T'+(g.time||'00:00')) >= new Date());
@@ -295,6 +296,7 @@ async function renderMyAssignments(){
 }
 
 async function renderAvailGames(){
+  if(!currentAvailUser) return;
   const el=document.getElementById('avail-games');
   const upcoming = sortedGames().filter(g=> new Date(g.date+'T'+(g.time||'00:00')) >= new Date());
   if(!upcoming.length){ el.innerHTML='<div class="empty">No upcoming games scheduled.</div>'; return; }
