@@ -143,16 +143,16 @@ button.btn.small{padding:5px 10px;font-size:11px;}
 .status-msg.ok{color:var(--ok);}
 .status-msg.bad{color:var(--bad);}
 .who-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px;}
-.subnav{display:flex;gap:6px;margin-bottom:16px;border-bottom:1px solid var(--line);flex-wrap:wrap;}
-.subnav button{
+.subnav,.avail-subnav{display:flex;gap:6px;margin-bottom:16px;border-bottom:1px solid var(--line);flex-wrap:wrap;}
+.subnav button,.avail-subnav button{
   background:transparent;border:none;color:var(--ice-dim);font-family:'Oswald',sans-serif;
   text-transform:uppercase;letter-spacing:.05em;font-size:13px;padding:9px 14px;cursor:pointer;
   border-bottom:3px solid transparent;
 }
-.subnav button.sub-active{color:var(--ice);border-bottom-color:var(--ember);}
-.subnav button:hover{color:var(--ice);}
-.subview{display:none;}
-.subview.sub-active{display:block;}
+.subnav button.sub-active,.avail-subnav button.sub-active{color:var(--ice);border-bottom-color:var(--ember);}
+.subnav button:hover,.avail-subnav button:hover{color:var(--ice);}
+.subview,.avail-subview{display:none;}
+.subview.sub-active,.avail-subview.sub-active{display:block;}
 .matrix-wrap{overflow-x:auto;}
 table.matrix{border-collapse:collapse;font-size:12px;white-space:nowrap;}
 table.matrix th,table.matrix td{border:1px solid var(--line);padding:6px 8px;text-align:center;}
