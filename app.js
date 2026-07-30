@@ -234,14 +234,23 @@ function populateLoginSelects(){
 }
 
 /* ---------------- AVAILABILITY VIEW ---------------- */
-document.getElementById('avail-login-btn').onclick = async ()=>{
-  await refreshAll();
-  const id=document.getElementById('avail-name').value;
-  const pin=document.getElementById('avail-pin').value.trim();
-  const o=roster.officials.find(x=>x.id===id);
-  const msg=document.getElementById('avail-login-msg');
-  if(!o || o.pin!==pin){ msg.textContent='Incorrect PIN.'; msg.className='status-msg bad'; return; }
-  msg.textContent=''; currentAvailUser=o;
+let pinModalContext=null, pinModalOfficialId=null;
+
+function openPinModal(context,officialId,displayName){
+  pinModalContext=context; pinModalOfficialId=officialId;
+  document.getElementById('pin-modal-name').textContent=displayName;
+  document.getElementById('pin-modal-input').value='';
+  document.getElementById('pin-modal-msg').textContent='';
+  document.getElementById('pin-modal-overlay').style.display='flex';
+  setTimeout(()=>document.getElementById('pin-modal-input').focus(),50);
+}
+function closePinModal(){
+  document.getElementById('pin-modal-overlay').style.display='none';
+  pinModalContext=null; pinModalOfficialId=null;
+}
+
+async function completeAvailLogin(o){
+  currentAvailUser=o;
   document.getElementById('avail-login').style.display='none';
   document.getElementById('avail-app').style.display='block';
   document.getElementById('avail-whoami').innerHTML = `${esc(o.name)} <span class="tag ${o.role==='admin'?'admin':'yes'}">${o.role==='admin'?'Admin':'Official'}</span>`;
@@ -258,15 +267,35 @@ document.getElementById('avail-login-btn').onclick = async ()=>{
   }
   await renderMyAssignments();
   await renderAvailGames();
+}
+async function completeAdminLogin(o){
+  currentAdminUser=o;
+  document.getElementById('admin-login').style.display='none';
+  document.getElementById('admin-app').style.display='block';
+  document.getElementById('admin-whoami').innerHTML=`${esc(o.name)} <span class="tag admin">Admin</span>`;
+  document.getElementById('nav-admin-btn').style.display='';
+  currentAvailUser=o;
+  document.getElementById('avail-login').style.display='none';
+  document.getElementById('avail-app').style.display='block';
+  document.getElementById('avail-whoami').innerHTML = `${esc(o.name)} <span class="tag admin">Admin</span>`;
+  populateAssignGameSelect();
+}
+
+document.getElementById('avail-login-btn').onclick = async ()=>{
+  await refreshAll();
+  const id=document.getElementById('avail-name').value;
+  const o=roster.officials.find(x=>x.id===id);
+  const msg=document.getElementById('avail-login-msg');
+  if(!o){ msg.textContent='No officials on the roster yet.'; msg.className='status-msg bad'; return; }
+  msg.textContent='';
+  openPinModal('avail',id,o.name);
 };
 document.getElementById('avail-logout').onclick=()=>{
   currentAvailUser=null; currentAdminUser=null;
   document.getElementById('avail-login').style.display='block';
   document.getElementById('avail-app').style.display='none';
-  document.getElementById('avail-pin').value='';
   document.getElementById('admin-login').style.display='block';
   document.getElementById('admin-app').style.display='none';
-  document.getElementById('admin-pin').value='';
   document.getElementById('nav-admin-btn').style.display='none';
 };
 
@@ -389,35 +418,46 @@ async function saveAvailability(monthKey){
 document.getElementById('admin-login-btn').onclick=async ()=>{
   await refreshAll();
   const id=document.getElementById('admin-name').value;
-  const pin=document.getElementById('admin-pin').value.trim();
   const o=roster.officials.find(x=>x.id===id && x.role==='admin');
   const msg=document.getElementById('admin-login-msg');
-  if(!o || o.pin!==pin){ msg.textContent='Incorrect PIN.'; msg.className='status-msg bad'; return; }
-  msg.textContent=''; currentAdminUser=o;
-  document.getElementById('admin-login').style.display='none';
-  document.getElementById('admin-app').style.display='block';
-  document.getElementById('admin-whoami').innerHTML=`${esc(o.name)} <span class="tag admin">Admin</span>`;
-  document.getElementById('nav-admin-btn').style.display='';
-  currentAvailUser=o;
-  document.getElementById('avail-login').style.display='none';
-  document.getElementById('avail-app').style.display='block';
-  document.getElementById('avail-whoami').innerHTML = `${esc(o.name)} <span class="tag admin">Admin</span>`;
-  populateAssignGameSelect();
+  if(!o){ msg.textContent='No admins on the roster yet.'; msg.className='status-msg bad'; return; }
+  msg.textContent='';
+  openPinModal('admin',id,o.name);
 };
 document.getElementById('admin-logout').onclick=()=>{
   currentAdminUser=null; currentAvailUser=null;
   document.getElementById('admin-login').style.display='block';
   document.getElementById('admin-app').style.display='none';
-  document.getElementById('admin-pin').value='';
   document.getElementById('avail-login').style.display='block';
   document.getElementById('avail-app').style.display='none';
-  document.getElementById('avail-pin').value='';
   document.getElementById('nav-admin-btn').style.display='none';
   document.querySelector('nav button[data-view="schedule"]').click();
 };
 document.getElementById('staff-login-link').onclick=()=>{
   document.getElementById('nav-admin-btn').click();
 };
+
+document.getElementById('pin-modal-cancel').onclick=closePinModal;
+document.getElementById('pin-modal-submit').onclick=submitPinModal;
+document.getElementById('pin-modal-input').addEventListener('keydown',(e)=>{
+  if(e.key==='Enter') submitPinModal();
+  if(e.key==='Escape') closePinModal();
+});
+async function submitPinModal(){
+  const pin=document.getElementById('pin-modal-input').value.trim();
+  const msg=document.getElementById('pin-modal-msg');
+  const o=roster.officials.find(x=>x.id===pinModalOfficialId);
+  if(!o || o.pin!==pin){
+    msg.textContent='Incorrect PIN.';
+    document.getElementById('pin-modal-input').value='';
+    document.getElementById('pin-modal-input').focus();
+    return;
+  }
+  const context=pinModalContext;
+  closePinModal();
+  if(context==='admin') await completeAdminLogin(o);
+  else await completeAvailLogin(o);
+}
 
 /* -- games mgmt -- */
 function renderAdminGamesList(){
