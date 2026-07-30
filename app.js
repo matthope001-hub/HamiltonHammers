@@ -699,6 +699,15 @@ document.getElementById('save-assign-btn').onclick=async ()=>{
   renderAssignBody(gameId);
 };
 
+/* ---------------- AVAILABILITY SUB-NAV ---------------- */
+document.querySelectorAll('.avail-subnav button').forEach(btn=>{
+  btn.onclick=()=>{
+    document.querySelectorAll('.avail-subnav button').forEach(b=>b.classList.remove('sub-active'));
+    document.querySelectorAll('.avail-subview').forEach(v=>v.classList.remove('sub-active'));
+    btn.classList.add('sub-active');
+    document.getElementById('avail-sub-'+btn.dataset.availSub).classList.add('sub-active');
+  };
+});
 /* ---------------- ADMIN SUB-NAV ---------------- */
 document.querySelectorAll('.subnav button').forEach(btn=>{
   btn.onclick=async ()=>{
