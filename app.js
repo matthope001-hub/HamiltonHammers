@@ -42,11 +42,17 @@ async function loadAll(){
 async function fetchGameData(gameId){
   const [availRows,assignRows] = await Promise.all([
     sb(`availability?game_id=eq.${gameId}&select=official_id,status`),
-    sb(`assignments?game_id=eq.${gameId}&select=position_name,official_id`)
+    sb(`assignments?game_id=eq.${gameId}&select=position_name,official_id,updated_at,updated_by`)
   ]);
   const availability={}; availRows.forEach(r=>availability[r.official_id]=r.status);
   const assignments={}; assignRows.forEach(r=>assignments[r.position_name]=r.official_id);
-  return {availability,assignments};
+  let lastUpdated=null;
+  assignRows.forEach(r=>{
+    if(r.updated_at && (!lastUpdated || new Date(r.updated_at) > new Date(lastUpdated.at))){
+      lastUpdated = {at:r.updated_at, by:r.updated_by};
+    }
+  });
+  return {availability,assignments,lastUpdated};
 }
 
 async function refreshAll(){
@@ -141,6 +147,19 @@ function monthLabel(d){
 }
 function esc(s){ return (s||'').replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c])); }
 function nameById(id){ const o=roster.officials.find(x=>x.id===id); return o? o.name : null; }
+function initials(name){
+  if(!name) return '?';
+  const parts=name.trim().split(/\s+/);
+  if(parts.length>=2) return (parts[0][0]+parts[1][0]).toUpperCase();
+  return name.slice(0,2).toUpperCase();
+}
+function lastUpdatedLine(lastUpdated){
+  if(!lastUpdated || !lastUpdated.at) return null;
+  const dt=new Date(lastUpdated.at);
+  const when=dt.toLocaleString('en-CA',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
+  const who=lastUpdated.by ? initials(nameById(lastUpdated.by)) : '?';
+  return `Last updated ${when} · ${esc(who)}`;
+}
 function crewOfficials(){ return roster.officials.filter(o=>!o.hidden); }
 
 /* ---------------- PUBLIC SCHEDULE ---------------- */
@@ -184,6 +203,7 @@ async function renderPublicSchedule(){
           return `<tr><td>${esc(p)}</td><td class="${name?'name':'unassigned'}">${name?esc(name):'Unassigned'}</td></tr>`;
         }).join('')}
         </tbody></table>
+        ${lastUpdatedLine(data.lastUpdated) ? `<div class="last-updated">${lastUpdatedLine(data.lastUpdated)}</div>` : ''}
         <div class="avail-summary">
           <div class="avail-col">
             <div class="avail-col-head yes">Available (${available.length})</div>
@@ -557,7 +577,8 @@ async function renderAssignBody(gameId){
     assignEligibleByPos[p] = eligible;
   });
 
-  let html = `<table><thead><tr><th>Official</th><th>Availability</th></tr></thead><tbody>`;
+  let html = lastUpdatedLine(data.lastUpdated) ? `<div class="last-updated" style="margin-bottom:12px;">${lastUpdatedLine(data.lastUpdated)}</div>` : '';
+  html += `<table><thead><tr><th>Official</th><th>Availability</th></tr></thead><tbody>`;
   html += officials.map(o=>`<tr><td class="name">${esc(o.name)}${o.role==='admin'?' <span class="tag admin">Admin</span>':''}</td><td>${availLabel(o.id)}</td></tr>`).join('') || '<tr><td colspan="2" class="muted">No officials on roster yet.</td></tr>';
   html += `</tbody></table><table style="margin-top:14px;"><thead><tr><th>Position</th><th>Assign</th></tr></thead><tbody>`;
   html += roster.positions.map(p=>{
@@ -642,12 +663,13 @@ document.getElementById('save-assign-btn').onclick=async ()=>{
   }
 
   await sb(`assignments?game_id=eq.${gameId}`,{method:'DELETE',headers:{'Prefer':'return=minimal'}});
-  const rows = Object.entries(draft).map(([position_name,official_id])=>({game_id:gameId,position_name,official_id}));
+  const rows = Object.entries(draft).map(([position_name,official_id])=>({game_id:gameId,position_name,official_id,updated_by:currentAdminUser.id}));
   if(rows.length){
     await sb('assignments',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify(rows)});
   }
   msg.textContent='Assignments saved.'; msg.className='status-msg ok';
   renderPublicSchedule();
+  renderAssignBody(gameId);
 };
 
 /* ---------------- ADMIN SUB-NAV ---------------- */
