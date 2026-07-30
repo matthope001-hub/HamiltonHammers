@@ -166,3 +166,22 @@ select.assign-select{width:100%;}
 .staff-footer{text-align:center;padding:30px 20px 50px;}
 .staff-footer button{background:none;border:none;color:var(--line);font-size:11px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;font-family:'Inter';}
 .staff-footer button:hover{color:var(--ice-dim);}
+
+.pin-modal-overlay{
+  position:fixed;inset:0;background:rgba(3,8,16,.72);display:flex;align-items:center;justify-content:center;
+  z-index:1000;padding:20px;
+}
+.pin-modal{
+  background:var(--steel);border:1px solid var(--line);border-radius:10px;padding:28px 26px;
+  width:100%;max-width:300px;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.5);
+}
+.pin-modal-name{font-family:'Oswald',sans-serif;font-size:18px;color:var(--ice);text-transform:uppercase;letter-spacing:.03em;margin-bottom:16px;}
+.pin-modal label{font-size:12px;color:var(--ice-dim);display:block;margin-bottom:6px;}
+.pin-modal input{
+  width:100%;text-align:center;font-size:22px;letter-spacing:.3em;padding:10px 10px;
+  background:var(--ink);border:1px solid var(--line);color:var(--ice);border-radius:6px;
+}
+.pin-modal input:focus{outline:1px solid var(--ember);border-color:var(--ember);}
+.pin-modal .status-msg{min-height:16px;margin-top:8px;}
+.pin-modal-actions{display:flex;gap:10px;margin-top:16px;}
+.pin-modal-actions .btn{flex:1;}
