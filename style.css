@@ -84,6 +84,7 @@ td.name{color:var(--ice);}
 .month-group summary:hover{background:var(--steel);}
 .month-body{padding:16px;}
 .month-body .game-block:last-child{margin-bottom:0;}
+.last-updated{font-size:11px;color:var(--ice-dim);font-family:'IBM Plex Mono',monospace;margin-top:10px;}
 .avail-summary{display:flex;gap:20px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--line);}
 .avail-col{flex:1;min-width:200px;}
 .avail-col-head{font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px;}
