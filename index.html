@@ -57,13 +57,24 @@
         <div class="chip" id="avail-whoami"></div>
         <button class="btn secondary small" id="avail-logout">Log Out</button>
       </div>
-      <div class="card">
-        <h2>My Upcoming Assignments<small>Positions you're scheduled for at upcoming home games</small></h2>
-        <div id="my-assignments"><div class="empty">Loading…</div></div>
+
+      <div class="avail-subnav">
+        <button data-avail-sub="assignments" class="sub-active">My Assignments</button>
+        <button data-avail-sub="availability">Set Availability</button>
       </div>
-      <div class="card">
-        <h2>Set Your Availability<small>Applies to upcoming home games only</small></h2>
-        <div id="avail-games"><div class="empty">Loading…</div></div>
+
+      <div class="avail-subview sub-active" id="avail-sub-assignments">
+        <div class="card">
+          <h2>My Upcoming Assignments<small>Positions you're scheduled for at upcoming home games</small></h2>
+          <div id="my-assignments"><div class="empty">Loading…</div></div>
+        </div>
+      </div>
+
+      <div class="avail-subview" id="avail-sub-availability">
+        <div class="card">
+          <h2>Set Your Availability<small>Applies to upcoming home games only</small></h2>
+          <div id="avail-games"><div class="empty">Loading…</div></div>
+        </div>
       </div>
     </div>
   </div>
