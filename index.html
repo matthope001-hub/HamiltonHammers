@@ -1,1 +1,984 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hamilton Hammers — Off-Ice Officials</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#071B33;
+  --steel:#0D2E54;
+  --steel-2:#123C6B;
+  --line:#22507D;
+  --ice:#F5F8FA;
+  --ice-dim:#9FB7CE;
+  --ember:#F4791E;
+  --ember-dim:#B3560F;
+  --gold:#C9D2DA;
+  --ok:#3FB27F;
+  --warn:#E0B23C;
+  --bad:#E14B3E;
+  font-family:'Inter',sans-serif;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--ink);color:var(--ice);min-height:100vh;}
+h1,h2,h3{font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:.03em;margin:0;}
+.mono{font-family:'IBM Plex Mono',monospace;}
 
+/* ---- header / scoreboard ---- */
+header{
+  background:linear-gradient(180deg,var(--steel) 0%,var(--steel-2) 100%);
+  border-bottom:3px solid var(--ember);
+  padding:22px 24px 18px;
+}
+.brand{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;justify-content:space-between;}
+.brand-name{font-size:26px;font-weight:700;color:var(--ice);display:flex;align-items:center;gap:10px;}
+.brand-icon{flex-shrink:0;}
+.brand-name span{color:var(--ember);}
+.brand-sub{font-size:12px;color:var(--ice-dim);letter-spacing:.15em;}
+.board{
+  margin-top:16px;background:var(--ink);border:1px solid var(--line);border-radius:6px;
+  padding:14px 18px;display:flex;gap:28px;flex-wrap:wrap;align-items:center;
+}
+.board .cell{display:flex;flex-direction:column;gap:2px;}
+.board .label{font-size:10px;letter-spacing:.14em;color:var(--ice-dim);text-transform:uppercase;}
+.board .value{font-family:'IBM Plex Mono',monospace;font-size:20px;color:var(--gold);font-weight:600;}
+.board .value.ember{color:var(--ember);}
+
+nav{display:flex;gap:6px;padding:14px 24px 0;background:var(--steel);flex-wrap:wrap;}
+nav button{
+  background:transparent;border:none;color:var(--ice-dim);font-family:'Oswald',sans-serif;
+  text-transform:uppercase;letter-spacing:.06em;font-size:14px;padding:10px 16px;cursor:pointer;
+  border-bottom:3px solid transparent;
+}
+nav button.active{color:var(--ice);border-bottom-color:var(--ember);}
+nav button:hover{color:var(--ice);}
+
+main{max-width:980px;margin:0 auto;padding:28px 20px 80px;}
+.view{display:none;}
+.view.active{display:block;}
+
+.card{background:var(--steel);border:1px solid var(--line);border-radius:8px;padding:18px 20px;margin-bottom:18px;}
+.card h2{font-size:18px;color:var(--ice);margin-bottom:10px;}
+.card h2 small{display:block;font-family:'Inter';text-transform:none;letter-spacing:0;color:var(--ice-dim);font-size:12px;margin-top:2px;}
+
+table{width:100%;border-collapse:collapse;font-size:14px;}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);}
+th{color:var(--ice-dim);font-family:'Oswald',sans-serif;text-transform:uppercase;font-size:11px;letter-spacing:.08em;}
+td.name{color:var(--ice);}
+.unassigned{color:var(--ice-dim);font-style:italic;}
+
+.game-block{border-left:3px solid var(--ember);padding-left:14px;margin-bottom:20px;}
+.game-block.unanswered{border-left-color:var(--bad);background:rgba(225,75,62,.08);border-radius:4px;padding:10px 14px;}
+.game-block.unanswered .game-title{color:var(--ice);}
+.month-group{border:1px solid var(--line);border-radius:6px;margin-bottom:12px;background:var(--ink);overflow:hidden;}
+.month-group summary{
+  cursor:pointer;list-style:none;padding:12px 16px;font-family:'Oswald',sans-serif;text-transform:uppercase;
+  letter-spacing:.04em;font-size:14px;color:var(--ice);display:flex;align-items:center;justify-content:space-between;gap:10px;
+  background:var(--steel-2);user-select:none;flex-wrap:wrap;
+}
+.summary-label{display:flex;align-items:baseline;gap:6px;}
+.status-badge{
+  font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.03em;text-transform:none;
+  padding:4px 10px;border-radius:12px;white-space:nowrap;
+}
+.status-badge.complete{background:rgba(63,178,127,.15);color:var(--ok);}
+.status-badge.partial{background:rgba(224,178,60,.15);color:var(--warn);}
+.status-badge.none{background:rgba(225,75,62,.15);color:var(--bad);}
+.month-group summary::-webkit-details-marker{display:none;}
+.month-group summary::before{content:'▸';color:var(--ember);font-size:12px;margin-right:2px;transition:transform .15s;}
+.month-group[open] summary::before{transform:rotate(90deg);}
+.month-group summary:hover{background:var(--steel);}
+.month-body{padding:16px;}
+.month-body .game-block:last-child{margin-bottom:0;}
+.avail-summary{display:flex;gap:20px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--line);}
+.avail-col{flex:1;min-width:200px;}
+.avail-col-head{font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px;}
+.avail-col-head.yes{color:var(--ok);}
+.avail-col-head.no{color:var(--bad);}
+.avail-names{font-size:13px;color:var(--ice-dim);line-height:1.5;}
+.game-head{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px;margin-bottom:8px;}
+.game-title{font-family:'Oswald',sans-serif;font-size:16px;color:var(--ice);}
+.game-date{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--gold);}
+
+input,select{
+  background:var(--ink);border:1px solid var(--line);color:var(--ice);border-radius:4px;
+  padding:8px 10px;font-family:'Inter';font-size:14px;
+}
+input:focus,select:focus{outline:1px solid var(--ember);border-color:var(--ember);}
+label{font-size:12px;color:var(--ice-dim);display:block;margin-bottom:4px;}
+.field{margin-bottom:12px;}
+.row{display:flex;gap:10px;flex-wrap:wrap;}
+.row>.field{flex:1;min-width:140px;}
+
+button.btn{
+  background:var(--ember);color:#fff;border:none;border-radius:4px;padding:9px 16px;
+  font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:.05em;font-size:13px;
+  cursor:pointer;
+}
+button.btn:hover{background:#ff6c36;}
+button.btn.secondary{background:transparent;border:1px solid var(--line);color:var(--ice-dim);}
+button.btn.secondary:hover{color:var(--ice);border-color:var(--ice-dim);}
+button.btn.danger{background:transparent;border:1px solid var(--bad);color:var(--bad);}
+button.btn.danger:hover{background:var(--bad);color:#fff;}
+button.btn.small{padding:5px 10px;font-size:11px;}
+
+.avail-choices{display:flex;gap:8px;}
+.avail-choices label{
+  display:flex;align-items:center;gap:6px;background:var(--ink);border:1px solid var(--line);
+  border-radius:4px;padding:7px 12px;cursor:pointer;font-size:13px;color:var(--ice-dim);margin:0;
+}
+.avail-choices input{width:auto;padding:0;}
+.tag{display:inline-block;padding:2px 8px;border-radius:3px;font-size:11px;font-family:'IBM Plex Mono';text-transform:uppercase;}
+.tag.yes{background:rgba(63,178,127,.15);color:var(--ok);}
+.tag.maybe{background:rgba(224,178,60,.15);color:var(--warn);}
+.tag.no{background:rgba(217,80,63,.15);color:var(--bad);}
+.tag.admin{background:rgba(201,162,39,.15);color:var(--gold);}
+
+.list-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);gap:10px;flex-wrap:wrap;}
+.list-row:last-child{border-bottom:none;}
+.muted{color:var(--ice-dim);font-size:13px;}
+.empty{color:var(--ice-dim);font-style:italic;padding:16px 0;text-align:center;}
+.login-box{max-width:360px;margin:40px auto;}
+.status-msg{font-size:13px;margin-top:8px;}
+.status-msg.ok{color:var(--ok);}
+.status-msg.bad{color:var(--bad);}
+.who-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px;}
+.subnav{display:flex;gap:6px;margin-bottom:16px;border-bottom:1px solid var(--line);flex-wrap:wrap;}
+.subnav button{
+  background:transparent;border:none;color:var(--ice-dim);font-family:'Oswald',sans-serif;
+  text-transform:uppercase;letter-spacing:.05em;font-size:13px;padding:9px 14px;cursor:pointer;
+  border-bottom:3px solid transparent;
+}
+.subnav button.sub-active{color:var(--ice);border-bottom-color:var(--ember);}
+.subnav button:hover{color:var(--ice);}
+.subview{display:none;}
+.subview.sub-active{display:block;}
+.matrix-wrap{overflow-x:auto;}
+table.matrix{border-collapse:collapse;font-size:12px;white-space:nowrap;}
+table.matrix th,table.matrix td{border:1px solid var(--line);padding:6px 8px;text-align:center;}
+table.matrix th.pos-col{font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:.03em;text-transform:uppercase;color:var(--ice-dim);writing-mode:vertical-rl;transform:rotate(180deg);max-width:26px;padding:8px 4px;}
+table.matrix td.who{text-align:left;color:var(--ice);font-weight:500;white-space:nowrap;}
+table.matrix input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:var(--ember);}
+.chip{background:var(--ink);border:1px solid var(--line);border-radius:20px;padding:6px 14px;font-size:13px;display:flex;align-items:center;gap:8px;}
+select.assign-select{width:100%;}
+.pos-edit-row{display:flex;gap:8px;align-items:center;padding:6px 0;}
+.pos-edit-row input{flex:1;}
+.staff-footer{text-align:center;padding:30px 20px 50px;}
+.staff-footer button{background:none;border:none;color:var(--line);font-size:11px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;font-family:'Inter';}
+.staff-footer button:hover{color:var(--ice-dim);}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="brand-name">
+      <svg class="brand-icon" viewBox="0 0 64 64" width="34" height="34" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <g stroke="var(--ice)" stroke-width="2" stroke-linejoin="round">
+          <rect x="8" y="26" width="20" height="9" rx="1.5" fill="var(--steel-2)" transform="rotate(-45 18 30.5)"/>
+          <rect x="4" y="29.5" width="10" height="14" rx="2" fill="var(--gold)" transform="rotate(-45 9 36.5)"/>
+          <rect x="36" y="26" width="20" height="9" rx="1.5" fill="var(--steel-2)" transform="rotate(45 46 30.5)"/>
+          <rect x="50" y="29.5" width="10" height="14" rx="2" fill="var(--gold)" transform="rotate(45 55 36.5)"/>
+        </g>
+        <circle cx="10" cy="41" r="3.2" fill="var(--ember)"/>
+        <circle cx="54" cy="41" r="3.2" fill="var(--ember)"/>
+      </svg>
+      HAMILTON <span>HAMMERS</span>
+    </div>
+    <div class="brand-sub">Off-Ice Officials Scheduling</div>
+  </div>
+  <div class="board" id="scoreboard"></div>
+</header>
+
+<nav>
+  <button data-view="schedule" class="active">Schedule</button>
+  <button data-view="availability">My Availability</button>
+  <button data-view="admin" id="nav-admin-btn" style="display:none;">Admin</button>
+</nav>
+
+<main>
+
+  <!-- PUBLIC SCHEDULE -->
+  <div class="view active" id="view-schedule">
+    <div class="card">
+      <h2>Home Game Schedule<small>Position assignments for upcoming and past home games</small></h2>
+      <div id="public-schedule"><div class="empty">Loading…</div></div>
+    </div>
+  </div>
+
+  <!-- AVAILABILITY (officials) -->
+  <div class="view" id="view-availability">
+    <div id="avail-login" class="login-box card">
+      <h2>Official Login</h2>
+      <div class="field">
+        <label>Name</label>
+        <select id="avail-name"></select>
+      </div>
+      <div class="field">
+        <label>PIN</label>
+        <input type="password" id="avail-pin" maxlength="6" placeholder="••••">
+      </div>
+      <button class="btn" id="avail-login-btn">Log In</button>
+      <div class="status-msg" id="avail-login-msg"></div>
+    </div>
+    <div id="avail-app" style="display:none;">
+      <div class="who-bar">
+        <div class="chip" id="avail-whoami"></div>
+        <button class="btn secondary small" id="avail-logout">Log Out</button>
+      </div>
+      <div class="card">
+        <h2>Set Your Availability<small>Applies to upcoming home games only</small></h2>
+        <div id="avail-games"><div class="empty">Loading…</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADMIN -->
+  <div class="view" id="view-admin">
+    <div id="admin-login" class="login-box card">
+      <h2>Admin Login</h2>
+      <div class="field">
+        <label>Name</label>
+        <select id="admin-name"></select>
+      </div>
+      <div class="field">
+        <label>PIN</label>
+        <input type="password" id="admin-pin" maxlength="6" placeholder="••••">
+      </div>
+      <button class="btn" id="admin-login-btn">Log In</button>
+      <div class="status-msg" id="admin-login-msg"></div>
+    </div>
+    <div id="admin-app" style="display:none;">
+      <div class="who-bar">
+        <div class="chip" id="admin-whoami"></div>
+        <button class="btn secondary small" id="admin-logout">Log Out</button>
+      </div>
+
+      <div class="subnav">
+        <button data-sub="assign" class="sub-active">Assignments</button>
+        <button data-sub="roster">Roster / Profiles</button>
+        <button data-sub="skills">Skills Matrix</button>
+        <button data-sub="games">Games</button>
+        <button data-sub="positions">Positions</button>
+      </div>
+
+      <div class="subview sub-active" id="sub-assign">
+        <div class="card">
+          <h2>Assign Positions<small>Choose a game to view availability and set assignments</small></h2>
+          <div class="field"><select id="assign-game-select"></select></div>
+          <div id="assign-body"></div>
+          <button class="btn" id="save-assign-btn" style="margin-top:10px;">Save Assignments</button>
+          <div class="status-msg" id="assign-msg"></div>
+        </div>
+      </div>
+
+      <div class="subview" id="sub-roster">
+        <div class="card">
+          <h2>Roster / Profiles<small>Officials and admins (name + 4–6 digit PIN)</small></h2>
+          <div id="admin-roster-list"></div>
+          <div class="row" style="margin-top:12px;">
+            <div class="field"><label>Name</label><input type="text" id="new-off-name"></div>
+            <div class="field"><label>PIN</label><input type="text" id="new-off-pin" placeholder="e.g. 1234"></div>
+            <div class="field" style="max-width:140px;">
+              <label>Role</label>
+              <select id="new-off-role"><option value="official">Official</option><option value="admin">Admin</option></select>
+            </div>
+          </div>
+          <button class="btn" id="add-off-btn">Add Person</button>
+        </div>
+      </div>
+
+      <div class="subview" id="sub-skills">
+        <div class="card">
+          <h2>Skills Matrix<small>Check every position each person is qualified to cover — this controls who appears in the Assignments dropdowns</small></h2>
+          <div id="skills-matrix-wrap"><div class="empty">Loading…</div></div>
+        </div>
+      </div>
+
+      <div class="subview" id="sub-games">
+        <div class="card">
+          <h2>Games<small>Add, edit, or remove home games</small></h2>
+          <div id="admin-games-list"></div>
+          <div class="row" style="margin-top:12px;">
+            <div class="field"><label>Date</label><input type="date" id="new-game-date"></div>
+            <div class="field"><label>Time</label><input type="time" id="new-game-time" value="19:00"></div>
+            <div class="field"><label>Opponent</label><input type="text" id="new-game-opp" placeholder="e.g. Toronto Marlies"></div>
+          </div>
+          <button class="btn" id="add-game-btn">Add Game</button>
+        </div>
+      </div>
+
+      <div class="subview" id="sub-positions">
+        <div class="card">
+          <h2>Positions<small>Edit the list of off-ice positions</small></h2>
+          <div id="admin-positions-list"></div>
+          <div class="row" style="margin-top:12px;">
+            <div class="field"><input type="text" id="new-pos-name" placeholder="New position name"></div>
+          </div>
+          <button class="btn" id="add-pos-btn">Add Position</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<div class="staff-footer">
+  <button id="staff-login-link">Staff Login</button>
+</div>
+
+<script>
+const SUPABASE_URL='https://istmdoxhjyardqxrmvcq.supabase.co';
+const SUPABASE_KEY='sb_publishable_7neuuaMH2JC4k3d2hA59lw_UcWlNvSO';
+
+async function sb(path,opts={}){
+  const res=await fetch(`${SUPABASE_URL}/rest/v1/${path}`,{
+    ...opts,
+    headers:{
+      'apikey':SUPABASE_KEY,
+      'Authorization':`Bearer ${SUPABASE_KEY}`,
+      'Content-Type':'application/json',
+      ...(opts.headers||{})
+    }
+  });
+  if(!res.ok){
+    const errText=await res.text().catch(()=>'');
+    console.error('Supabase error',res.status,errText);
+    throw new Error('Supabase request failed: '+res.status);
+  }
+  const text=await res.text();
+  return text?JSON.parse(text):null;
+}
+
+let roster={officials:[],positions:[]};
+let games=[];
+let positionIdByName={};
+let currentAvailUser=null, currentAdminUser=null;
+let backendUnavailable=false;
+
+async function loadAll(){
+  const [officialRows,positionRows,gameRows] = await Promise.all([
+    sb('officials?select=*&order=name.asc'),
+    sb('positions?select=*&order=sort_order.asc'),
+    sb('games?select=*&order=game_date.asc,game_time.asc')
+  ]);
+  roster.officials = officialRows.map(o=>({id:o.id,name:o.name,pin:o.pin,role:o.role,skills:o.skills||[]}));
+  roster.positions = positionRows.map(p=>p.name);
+  positionIdByName = {};
+  positionRows.forEach(p=>positionIdByName[p.name]=p.id);
+  games = gameRows.map(g=>({id:g.id,date:g.game_date,time:(g.game_time||'19:00').slice(0,5),opponent:g.opponent||''}));
+}
+
+async function fetchGameData(gameId){
+  const [availRows,assignRows] = await Promise.all([
+    sb(`availability?game_id=eq.${gameId}&select=official_id,status`),
+    sb(`assignments?game_id=eq.${gameId}&select=position_name,official_id`)
+  ]);
+  const availability={}; availRows.forEach(r=>availability[r.official_id]=r.status);
+  const assignments={}; assignRows.forEach(r=>assignments[r.position_name]=r.official_id);
+  return {availability,assignments};
+}
+
+async function refreshAll(){
+  await loadAll();
+}
+
+async function init(){
+  try{
+    await loadAll();
+  }catch(e){
+    backendUnavailable=true;
+    document.body.insertAdjacentHTML('afterbegin', `<div style="background:#E14B3E;color:#fff;text-align:center;padding:10px;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;">
+      ⚠️ Can't reach the database right now — check your internet connection and reload. Nothing will save until this is resolved.
+    </div>`);
+  }
+
+  renderScoreboard();
+  renderPublicSchedule();
+  populateLoginSelects();
+  renderAdminGamesList();
+  renderAdminRoster();
+  renderAdminPositions();
+  populateAssignGameSelect();
+}
+
+function sortedGames(){ return [...games].sort((a,b)=> new Date(a.date+'T'+(a.time||'00:00')) - new Date(b.date+'T'+(b.time||'00:00'))); }
+function nextHomeGame(){
+  const now=new Date();
+  return sortedGames().find(g=> new Date(g.date+'T'+(g.time||'00:00')) >= now);
+}
+
+function renderScoreboard(){
+  const board=document.getElementById('scoreboard');
+  const ng=nextHomeGame();
+  const officialCount=roster.officials.length;
+  board.innerHTML = `
+    <div class="cell"><div class="label">Next Home Game</div><div class="value">${ng? fmtDate(ng.date)+' · '+ng.time : '— none scheduled —'}</div></div>
+    <div class="cell"><div class="label">Opponent</div><div class="value">${ng? esc(ng.opponent||'TBD') : '—'}</div></div>
+    <div class="cell"><div class="label">Puck Drop In</div><div class="value ember" id="countdown-value">--</div></div>
+    <div class="cell"><div class="label">Officials on Roster</div><div class="value">${officialCount}</div></div>
+    <div class="cell"><div class="label">Open Positions</div><div class="value">${roster.positions.length}</div></div>
+  `;
+  tickCountdown();
+}
+function tickCountdown(){
+  const el=document.getElementById('countdown-value');
+  if(!el) return;
+  const ng=nextHomeGame();
+  if(!ng){ el.textContent='—'; return; }
+  const target=new Date(ng.date+'T'+(ng.time||'00:00'));
+  const diff=target-new Date();
+  if(diff<=0){ el.textContent='Puck drop!'; return; }
+  const d=Math.floor(diff/86400000);
+  const h=Math.floor((diff%86400000)/3600000);
+  const m=Math.floor((diff%3600000)/60000);
+  const s=Math.floor((diff%60000)/1000);
+  el.textContent = `${d}d ${String(h).padStart(2,'0')}h ${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}s`;
+}
+setInterval(tickCountdown,1000);
+
+function fmtDate(d){
+  const dt=new Date(d+'T00:00:00');
+  return dt.toLocaleDateString('en-CA',{weekday:'short',month:'short',day:'numeric'});
+}
+function monthLabel(d){
+  const dt=new Date(d+'T00:00:00');
+  return dt.toLocaleDateString('en-CA',{month:'long',year:'numeric'});
+}
+function esc(s){ return (s||'').replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c])); }
+function nameById(id){ const o=roster.officials.find(x=>x.id===id); return o? o.name : null; }
+
+/* ---------------- PUBLIC SCHEDULE ---------------- */
+async function renderPublicSchedule(){
+  const el=document.getElementById('public-schedule');
+  const list=sortedGames();
+  if(!list.length){ el.innerHTML='<div class="empty">No games scheduled yet.</div>'; return; }
+
+  const ng=nextHomeGame();
+  const nextMonthKey = ng ? ng.date.slice(0,7) : null;
+
+  const months=[];
+  for(const g of list){
+    const monthKey = g.date.slice(0,7);
+    let group = months.find(m=>m.key===monthKey);
+    if(!group){ group={key:monthKey,label:monthLabel(g.date),games:[]}; months.push(group); }
+    group.games.push(g);
+  }
+
+  let html='';
+  for(const m of months){
+    let inner='';
+    for(const g of m.games){
+      const data = await fetchGameData(g.id);
+      const available=[], unavailable=[];
+      for(const o of roster.officials){
+        const status = data.availability[o.id];
+        if(status==='yes') available.push(o.name);
+        else if(status==='no') unavailable.push(o.name);
+      }
+      available.sort((a,b)=>a.localeCompare(b));
+      unavailable.sort((a,b)=>a.localeCompare(b));
+      inner += `<div class="game-block">
+        <div class="game-head">
+          <div class="game-title">vs ${esc(g.opponent||'TBD')}</div>
+          <div class="game-date mono">${fmtDate(g.date)} · ${g.time||''}</div>
+        </div>
+        <table><thead><tr><th>Position</th><th>Assigned</th></tr></thead><tbody>
+        ${roster.positions.map(p=>{
+          const name = nameById(data.assignments[p]);
+          return `<tr><td>${esc(p)}</td><td class="${name?'name':'unassigned'}">${name?esc(name):'Unassigned'}</td></tr>`;
+        }).join('')}
+        </tbody></table>
+        <div class="avail-summary">
+          <div class="avail-col">
+            <div class="avail-col-head yes">Available (${available.length})</div>
+            <div class="avail-names">${available.length? available.map(esc).join(', ') : '<span class="muted">No one yet</span>'}</div>
+          </div>
+          <div class="avail-col">
+            <div class="avail-col-head no">Not Available (${unavailable.length})</div>
+            <div class="avail-names">${unavailable.length? unavailable.map(esc).join(', ') : '<span class="muted">No one yet</span>'}</div>
+          </div>
+        </div>
+      </div>`;
+    }
+    const isOpen = nextMonthKey ? m.key===nextMonthKey : m===months[0];
+    html += `<details class="month-group" ${isOpen?'open':''}>
+      <summary>${m.label} <span class="muted">(${m.games.length} game${m.games.length>1?'s':''})</span></summary>
+      <div class="month-body">${inner}</div>
+    </details>`;
+  }
+  el.innerHTML=html;
+}
+
+/* ---------------- LOGIN SELECTS ---------------- */
+function populateLoginSelects(){
+  const officials = [...roster.officials].sort((a,b)=>a.name.localeCompare(b.name));
+  const admins = roster.officials.filter(o=>o.role==='admin').sort((a,b)=>a.name.localeCompare(b.name));
+  document.getElementById('avail-name').innerHTML = officials.map(o=>`<option value="${o.id}">${esc(o.name)}</option>`).join('') || '<option>No officials yet — ask an admin</option>';
+  document.getElementById('admin-name').innerHTML = admins.map(o=>`<option value="${o.id}">${esc(o.name)}</option>`).join('') || '<option>No admins yet</option>';
+}
+
+/* ---------------- AVAILABILITY VIEW ---------------- */
+document.getElementById('avail-login-btn').onclick = async ()=>{
+  await refreshAll();
+  const id=document.getElementById('avail-name').value;
+  const pin=document.getElementById('avail-pin').value.trim();
+  const o=roster.officials.find(x=>x.id===id);
+  const msg=document.getElementById('avail-login-msg');
+  if(!o || o.pin!==pin){ msg.textContent='Incorrect PIN.'; msg.className='status-msg bad'; return; }
+  msg.textContent=''; currentAvailUser=o;
+  document.getElementById('avail-login').style.display='none';
+  document.getElementById('avail-app').style.display='block';
+  document.getElementById('avail-whoami').innerHTML = `${esc(o.name)} <span class="tag ${o.role==='admin'?'admin':'yes'}">${o.role==='admin'?'Admin':'Official'}</span>`;
+  document.getElementById('nav-admin-btn').style.display = (o.role==='admin') ? '' : 'none';
+  if(o.role==='admin'){
+    currentAdminUser=o;
+    document.getElementById('admin-login').style.display='none';
+    document.getElementById('admin-app').style.display='block';
+    document.getElementById('admin-whoami').innerHTML=`${esc(o.name)} <span class="tag admin">Admin</span>`;
+    populateAssignGameSelect();
+  }
+  if(o.role!=='admin' && document.getElementById('view-admin').classList.contains('active')){
+    document.querySelector('nav button[data-view="schedule"]').click();
+  }
+  await renderAvailGames();
+};
+document.getElementById('avail-logout').onclick=()=>{
+  currentAvailUser=null; currentAdminUser=null;
+  document.getElementById('avail-login').style.display='block';
+  document.getElementById('avail-app').style.display='none';
+  document.getElementById('avail-pin').value='';
+  document.getElementById('admin-login').style.display='block';
+  document.getElementById('admin-app').style.display='none';
+  document.getElementById('admin-pin').value='';
+  document.getElementById('nav-admin-btn').style.display='none';
+};
+
+async function renderAvailGames(){
+  const el=document.getElementById('avail-games');
+  const upcoming = sortedGames().filter(g=> new Date(g.date+'T'+(g.time||'00:00')) >= new Date());
+  if(!upcoming.length){ el.innerHTML='<div class="empty">No upcoming games scheduled.</div>'; return; }
+
+  const months=[];
+  for(const g of upcoming){
+    const monthKey = g.date.slice(0,7);
+    let group = months.find(m=>m.key===monthKey);
+    if(!group){ group={key:monthKey,label:monthLabel(g.date),games:[]}; months.push(group); }
+    group.games.push(g);
+  }
+
+  let html='';
+  for(let i=0;i<months.length;i++){
+    const m=months[i];
+    let inner='';
+    let submitted=0;
+    for(const g of m.games){
+      const data = await fetchGameData(g.id);
+      const current = data.availability[currentAvailUser.id] || '';
+      if(current) submitted++;
+      inner += `<div class="game-block ${current?'':'unanswered'}" data-game="${g.id}">
+        <div class="game-head">
+          <div class="game-title">vs ${esc(g.opponent||'TBD')} ${current?'':'<span class="tag no">Not Submitted</span>'}</div>
+          <div class="game-date mono">${fmtDate(g.date)} · ${g.time||''}</div>
+        </div>
+        <div class="avail-choices">
+          ${['yes','no'].map(v=>`
+            <label><input type="radio" name="av-${g.id}" value="${v}" ${current===v?'checked':''}> ${v==='yes'?'Available':'Not Available'}</label>
+          `).join('')}
+        </div>
+      </div>`;
+    }
+    const total=m.games.length;
+    const statusClass = submitted===total ? 'complete' : (submitted===0 ? 'none' : 'partial');
+    const statusLabel = submitted===total ? 'All set' : `${submitted}/${total} submitted`;
+    m.submitted=submitted; m.total=total;
+    html += `<details class="month-group" ${i===0?'open':''}>
+      <summary>
+        <span class="summary-label">${m.label} <span class="muted">(${m.games.length} game${m.games.length>1?'s':''})</span></span>
+        <span class="status-badge ${statusClass}">${statusLabel}</span>
+      </summary>
+      <div class="month-body">
+        ${inner}
+        <button class="btn save-month-btn" data-month="${m.key}" style="margin-top:4px;">Save Availability</button>
+        <div class="status-msg" data-month-msg="${m.key}"></div>
+      </div>
+    </details>`;
+  }
+  el.innerHTML=html;
+  document.querySelectorAll('.save-month-btn').forEach(btn=>{
+    btn.onclick=()=>saveAvailability(btn.dataset.month);
+  });
+}
+
+async function saveAvailability(monthKey){
+  const monthGroup = [...document.querySelectorAll('.month-group')].find(d=>d.querySelector(`.save-month-btn[data-month="${monthKey}"]`));
+  const blocks = monthGroup.querySelectorAll('.game-block');
+  let submitted=0;
+  for(const b of blocks){
+    const gameId=b.dataset.game;
+    const checked=b.querySelector('input[type=radio]:checked');
+    const titleEl = b.querySelector('.game-title');
+    const baseTitle = titleEl.textContent.replace('Not Submitted','').trim();
+    if(!checked){
+      b.classList.add('unanswered');
+      titleEl.innerHTML = `${esc(baseTitle)} <span class="tag no">Not Submitted</span>`;
+      continue;
+    }
+    submitted++;
+    b.classList.remove('unanswered');
+    titleEl.textContent = baseTitle;
+    await sb('availability?on_conflict=game_id,official_id',{
+      method:'POST',
+      headers:{'Prefer':'resolution=merge-duplicates,return=minimal'},
+      body:JSON.stringify([{game_id:gameId,official_id:currentAvailUser.id,status:checked.value}])
+    });
+  }
+  const total=blocks.length;
+  const badge=monthGroup.querySelector('.status-badge');
+  badge.className = `status-badge ${submitted===total?'complete':(submitted===0?'none':'partial')}`;
+  badge.textContent = submitted===total ? 'All set' : `${submitted}/${total} submitted`;
+  const msg=monthGroup.querySelector(`[data-month-msg="${monthKey}"]`);
+  msg.textContent = submitted===total ? 'Saved — all games in this month answered.' : `Saved — ${total-submitted} game${total-submitted>1?'s':''} still need a response (highlighted below).`;
+  msg.className='status-msg ' + (submitted===total ? 'ok' : 'bad');
+  renderPublicSchedule();
+}
+
+/* ---------------- ADMIN VIEW ---------------- */
+document.getElementById('admin-login-btn').onclick=async ()=>{
+  await refreshAll();
+  const id=document.getElementById('admin-name').value;
+  const pin=document.getElementById('admin-pin').value.trim();
+  const o=roster.officials.find(x=>x.id===id && x.role==='admin');
+  const msg=document.getElementById('admin-login-msg');
+  if(!o || o.pin!==pin){ msg.textContent='Incorrect PIN.'; msg.className='status-msg bad'; return; }
+  msg.textContent=''; currentAdminUser=o;
+  document.getElementById('admin-login').style.display='none';
+  document.getElementById('admin-app').style.display='block';
+  document.getElementById('admin-whoami').innerHTML=`${esc(o.name)} <span class="tag admin">Admin</span>`;
+  document.getElementById('nav-admin-btn').style.display='';
+  currentAvailUser=o;
+  document.getElementById('avail-login').style.display='none';
+  document.getElementById('avail-app').style.display='block';
+  document.getElementById('avail-whoami').innerHTML = `${esc(o.name)} <span class="tag admin">Admin</span>`;
+  populateAssignGameSelect();
+};
+document.getElementById('admin-logout').onclick=()=>{
+  currentAdminUser=null; currentAvailUser=null;
+  document.getElementById('admin-login').style.display='block';
+  document.getElementById('admin-app').style.display='none';
+  document.getElementById('admin-pin').value='';
+  document.getElementById('avail-login').style.display='block';
+  document.getElementById('avail-app').style.display='none';
+  document.getElementById('avail-pin').value='';
+  document.getElementById('nav-admin-btn').style.display='none';
+  document.querySelector('nav button[data-view="schedule"]').click();
+};
+document.getElementById('staff-login-link').onclick=()=>{
+  document.getElementById('nav-admin-btn').click();
+};
+
+/* -- games mgmt -- */
+function renderAdminGamesList(){
+  const el=document.getElementById('admin-games-list');
+  const list=sortedGames();
+  if(!list.length){ el.innerHTML='<div class="empty">No games yet.</div>'; return; }
+  el.innerHTML=list.map(g=>`
+    <div class="list-row" data-game="${g.id}">
+      <div class="row" style="flex:1;align-items:center;">
+        <input type="date" class="edit-date" value="${g.date}" style="max-width:150px;">
+        <input type="time" class="edit-time" value="${g.time||''}" style="max-width:110px;">
+        <input type="text" class="edit-opp" value="${esc(g.opponent||'')}" placeholder="Opponent" style="flex:1;min-width:160px;">
+      </div>
+      <button class="btn small" onclick="saveGameEdit('${g.id}')">Save</button>
+      <button class="btn danger small" onclick="removeGame('${g.id}')">Remove</button>
+    </div>`).join('');
+}
+async function saveGameEdit(id){
+  const row=document.querySelector(`#admin-games-list .list-row[data-game="${id}"]`);
+  const date=row.querySelector('.edit-date').value;
+  const time=row.querySelector('.edit-time').value;
+  const opponent=row.querySelector('.edit-opp').value.trim();
+  if(!date){ alert('A date is required.'); return; }
+  await sb(`games?id=eq.${id}`,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({game_date:date,game_time:time,opponent})});
+  await refreshAll();
+  renderAdminGamesList(); renderPublicSchedule(); renderScoreboard(); populateAssignGameSelect();
+}
+document.getElementById('add-game-btn').onclick=async ()=>{
+  const date=document.getElementById('new-game-date').value;
+  const time=document.getElementById('new-game-time').value;
+  const opp=document.getElementById('new-game-opp').value.trim();
+  if(!date){ alert('Pick a date.'); return; }
+  await sb('games',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({game_date:date,game_time:time,opponent:opp})});
+  await refreshAll();
+  document.getElementById('new-game-opp').value='';
+  renderAdminGamesList(); renderPublicSchedule(); renderScoreboard(); populateAssignGameSelect();
+};
+async function removeGame(id){
+  if(!confirm('Remove this game and its assignments?')) return;
+  await sb(`games?id=eq.${id}`,{method:'DELETE',headers:{'Prefer':'return=minimal'}});
+  await refreshAll();
+  renderAdminGamesList(); renderPublicSchedule(); renderScoreboard(); populateAssignGameSelect();
+}
+
+/* -- roster mgmt -- */
+function renderAdminRoster(){
+  const el=document.getElementById('admin-roster-list');
+  if(!roster.officials.length){ el.innerHTML='<div class="empty">No one on the roster yet.</div>'; return; }
+  const sorted = [...roster.officials].sort((a,b)=>a.name.localeCompare(b.name));
+  el.innerHTML=sorted.map(o=>`
+    <div class="list-row" data-official="${o.id}">
+      <div class="row" style="flex:1;align-items:center;">
+        <input type="text" class="edit-off-name" value="${esc(o.name)}" style="min-width:140px;">
+        <input type="text" class="edit-off-pin" value="${esc(o.pin)}" style="max-width:100px;">
+        <select class="edit-off-role" style="max-width:120px;">
+          <option value="official" ${o.role!=='admin'?'selected':''}>Official</option>
+          <option value="admin" ${o.role==='admin'?'selected':''}>Admin</option>
+        </select>
+      </div>
+      <button class="btn small" onclick="saveOfficialEdit('${o.id}')">Save</button>
+      <button class="btn danger small" onclick="removeOfficial('${o.id}')">Remove</button>
+    </div>`).join('');
+}
+async function saveOfficialEdit(id){
+  const row=document.querySelector(`#admin-roster-list .list-row[data-official="${id}"]`);
+  const name=row.querySelector('.edit-off-name').value.trim();
+  const pin=row.querySelector('.edit-off-pin').value.trim();
+  const role=row.querySelector('.edit-off-role').value;
+  if(!name || !/^\d{4,6}$/.test(pin)){ alert('Enter a name and a 4–6 digit PIN.'); return; }
+  await sb(`officials?id=eq.${id}`,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({name,pin,role})});
+  await refreshAll();
+  renderAdminRoster(); populateLoginSelects(); renderScoreboard(); renderSkillsMatrix();
+}
+document.getElementById('add-off-btn').onclick=async ()=>{
+  const name=document.getElementById('new-off-name').value.trim();
+  const pin=document.getElementById('new-off-pin').value.trim();
+  const role=document.getElementById('new-off-role').value;
+  if(!name || !/^\d{4,6}$/.test(pin)){ alert('Enter a name and a 4–6 digit PIN.'); return; }
+  await sb('officials',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({name,pin,role,skills:[]})});
+  await refreshAll();
+  document.getElementById('new-off-name').value=''; document.getElementById('new-off-pin').value='';
+  renderAdminRoster(); populateLoginSelects(); renderScoreboard(); renderSkillsMatrix();
+};
+async function removeOfficial(id){
+  if(!confirm('Remove this person from the roster?')) return;
+  await sb(`officials?id=eq.${id}`,{method:'DELETE',headers:{'Prefer':'return=minimal'}});
+  await refreshAll();
+  renderAdminRoster(); populateLoginSelects(); renderScoreboard();
+}
+
+/* -- skills matrix -- */
+async function renderSkillsMatrix(){
+  const wrap=document.getElementById('skills-matrix-wrap');
+  wrap.innerHTML='<div class="empty">Loading…</div>';
+  await refreshAll();
+  const officials=[...roster.officials].sort((a,b)=>a.name.localeCompare(b.name));
+  if(!officials.length){ wrap.innerHTML='<div class="empty">No officials on roster yet. Add people in the Roster / Profiles tab first.</div>'; return; }
+  if(!roster.positions.length){ wrap.innerHTML='<div class="empty">Add positions first.</div>'; return; }
+  let html='<div class="matrix-wrap"><table class="matrix"><thead><tr><th class="who" style="text-align:left;">Official</th>';
+  html += roster.positions.map(p=>`<th class="pos-col">${esc(p)}</th>`).join('');
+  html += '</tr></thead><tbody>';
+  html += officials.map(o=>{
+    const skills = o.skills || [];
+    return `<tr><td class="who">${esc(o.name)}${o.role==='admin'?' <span class="tag admin">Admin</span>':''}</td>` +
+      roster.positions.map(p=>`<td><input type="checkbox" ${skills.includes(p)?'checked':''} onchange="toggleSkill('${o.id}','${p.replace(/'/g,"\\'")}',this.checked)"></td>`).join('') +
+      `</tr>`;
+  }).join('');
+  html += '</tbody></table></div><div class="muted" style="margin-top:10px;">Unchecked = not qualified for that position, so they won\'t appear in its Assignments dropdown.</div>';
+  wrap.innerHTML=html;
+}
+async function toggleSkill(officialId,position,checked){
+  const o=roster.officials.find(x=>x.id===officialId);
+  if(!o) return;
+  if(!o.skills) o.skills = [];
+  if(checked){ if(!o.skills.includes(position)) o.skills.push(position); }
+  else { o.skills = o.skills.filter(p=>p!==position); }
+  await sb(`officials?id=eq.${officialId}`,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({skills:o.skills})});
+}
+
+/* -- positions mgmt -- */
+function renderAdminPositions(){
+  const el=document.getElementById('admin-positions-list');
+  el.innerHTML=roster.positions.map(p=>`
+    <div class="pos-edit-row">
+      <input type="text" value="${esc(p)}" onchange="renamePosition('${esc(p).replace(/'/g,"\\'")}',this.value)">
+      <button class="btn danger small" onclick="removePosition('${esc(p).replace(/'/g,"\\'")}')">Remove</button>
+    </div>`).join('');
+}
+document.getElementById('add-pos-btn').onclick=async ()=>{
+  const val=document.getElementById('new-pos-name').value.trim().toUpperCase();
+  if(!val) return;
+  await sb('positions',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({name:val,sort_order:roster.positions.length+1})});
+  await refreshAll();
+  document.getElementById('new-pos-name').value='';
+  renderAdminPositions(); renderPublicSchedule(); renderScoreboard(); populateAssignGameSelect(); renderSkillsMatrix();
+};
+async function renamePosition(oldName,val){
+  const newName=val.trim().toUpperCase();
+  if(!newName){ renderAdminPositions(); return; }
+  const id=positionIdByName[oldName];
+  await sb(`positions?id=eq.${id}`,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({name:newName})});
+  await refreshAll();
+  renderPublicSchedule(); populateAssignGameSelect();
+}
+async function removePosition(name){
+  if(!confirm('Remove this position?')) return;
+  const id=positionIdByName[name];
+  await sb(`positions?id=eq.${id}`,{method:'DELETE',headers:{'Prefer':'return=minimal'}});
+  await refreshAll();
+  renderAdminPositions(); renderPublicSchedule(); renderScoreboard(); populateAssignGameSelect();
+}
+
+/* -- assignments -- */
+function populateAssignGameSelect(){
+  const sel=document.getElementById('assign-game-select');
+  const list=sortedGames();
+  sel.innerHTML = list.map(g=>`<option value="${g.id}">${fmtDate(g.date)} · vs ${esc(g.opponent||'TBD')}</option>`).join('') || '<option>No games yet</option>';
+  if(list.length) renderAssignBody(list[0].id);
+  sel.onchange=()=>renderAssignBody(sel.value);
+}
+let assignEligibleByPos = {};
+let assignAvailabilityMap = {};
+
+async function renderAssignBody(gameId){
+  const body=document.getElementById('assign-body');
+  if(!gameId){ body.innerHTML='<div class="empty">Add a game first.</div>'; return; }
+  const data = await fetchGameData(gameId);
+  const officials = [...roster.officials].sort((a,b)=>a.name.localeCompare(b.name));
+  const availLabel = id => ({yes:'<span class="tag yes">Available</span>',no:'<span class="tag no">Not Available</span>'}[data.availability[id]] || '<span class="muted">No response</span>');
+
+  assignAvailabilityMap = data.availability;
+  assignEligibleByPos = {};
+  roster.positions.forEach(p=>{
+    let eligible = officials.filter(o=> data.availability[o.id]!=='no' && (o.skills||[]).includes(p));
+    const currentPick = data.assignments[p];
+    if(currentPick && !eligible.some(o=>o.id===currentPick)){
+      const forced = officials.find(o=>o.id===currentPick);
+      if(forced) eligible = [...eligible, {...forced, forced:true}];
+    }
+    assignEligibleByPos[p] = eligible;
+  });
+
+  let html = `<table><thead><tr><th>Official</th><th>Availability</th></tr></thead><tbody>`;
+  html += officials.map(o=>`<tr><td class="name">${esc(o.name)}${o.role==='admin'?' <span class="tag admin">Admin</span>':''}</td><td>${availLabel(o.id)}</td></tr>`).join('') || '<tr><td colspan="2" class="muted">No officials on roster yet.</td></tr>';
+  html += `</tbody></table><table style="margin-top:14px;"><thead><tr><th>Position</th><th>Assign</th></tr></thead><tbody>`;
+  html += roster.positions.map(p=>{
+    const currentPick = data.assignments[p] || '';
+    return `<tr><td>${esc(p)}</td><td><select class="assign-select" data-pos="${esc(p)}" data-current="${esc(currentPick)}"></select></td></tr>`;
+  }).join('');
+  html += `</tbody></table>`;
+  body.innerHTML=html;
+  body.dataset.game=gameId;
+
+  body.querySelectorAll('select.assign-select').forEach(sel=>{
+    sel.value = sel.dataset.current;
+    sel.addEventListener('change', refreshAssignDropdowns);
+  });
+  refreshAssignDropdowns();
+}
+
+function refreshAssignDropdowns(){
+  const body=document.getElementById('assign-body');
+  const selects=[...body.querySelectorAll('select.assign-select')];
+  const picks={};
+  selects.forEach(sel=>{ if(sel.value) picks[sel.dataset.pos]=sel.value; });
+
+  selects.forEach(sel=>{
+    const pos=sel.dataset.pos;
+    const currentValue = sel.value || sel.dataset.current || '';
+    const eligible = assignEligibleByPos[pos] || [];
+    const filtered = eligible.filter(o=>{
+      if(o.id===currentValue) return true;
+      const otherPositions = Object.entries(picks).filter(([p,id])=> p!==pos && id===o.id).map(([p])=>p);
+      if(otherPositions.length===0) return true;
+      if(otherPositions.length===1 && (otherPositions[0]==='CREW CHIEF' || pos==='CREW CHIEF')) return true;
+      return false;
+    });
+    const opts = filtered.map(o=>{
+      const mark = assignAvailabilityMap[o.id]==='yes' ? ' ✓' : '';
+      const forced = o.forced ? ' (not eligible)' : '';
+      return `<option value="${o.id}" ${o.id===currentValue?'selected':''}>${esc(o.name)}${mark}${forced}</option>`;
+    }).join('');
+    sel.innerHTML = `<option value="">— Unassigned —</option>${opts}`;
+    sel.value = currentValue;
+    sel.dataset.current = currentValue;
+  });
+}
+document.getElementById('save-assign-btn').onclick=async ()=>{
+  const body=document.getElementById('assign-body');
+  const gameId=body.dataset.game;
+  if(!gameId) return;
+  const msg=document.getElementById('assign-msg');
+
+  const draft={};
+  body.querySelectorAll('select.assign-select').forEach(sel=>{
+    const pos=sel.dataset.pos;
+    if(sel.value) draft[pos]=sel.value;
+  });
+
+  const byOfficial={};
+  Object.entries(draft).forEach(([pos,offId])=>{
+    (byOfficial[offId]=byOfficial[offId]||[]).push(pos);
+  });
+  const conflicts=[];
+  Object.entries(byOfficial).forEach(([offId,positions])=>{
+    if(positions.length<=1) return;
+    const hasCrewChief = positions.includes('CREW CHIEF');
+    if(!hasCrewChief || positions.length>2){
+      conflicts.push(`${nameById(offId)||'Unknown'}: ${positions.join(' + ')}`);
+    }
+  });
+  if(conflicts.length){
+    msg.innerHTML = `Can't save — double-booked (only Crew Chief may be paired with one other position):<br>${conflicts.map(esc).join('<br>')}`;
+    msg.className='status-msg bad';
+    return;
+  }
+
+  await sb(`assignments?game_id=eq.${gameId}`,{method:'DELETE',headers:{'Prefer':'return=minimal'}});
+  const rows = Object.entries(draft).map(([position_name,official_id])=>({game_id:gameId,position_name,official_id}));
+  if(rows.length){
+    await sb('assignments',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify(rows)});
+  }
+  msg.textContent='Assignments saved.'; msg.className='status-msg ok';
+  renderPublicSchedule();
+};
+
+/* ---------------- ADMIN SUB-NAV ---------------- */
+document.querySelectorAll('.subnav button').forEach(btn=>{
+  btn.onclick=async ()=>{
+    document.querySelectorAll('.subnav button').forEach(b=>b.classList.remove('sub-active'));
+    document.querySelectorAll('.subview').forEach(v=>v.classList.remove('sub-active'));
+    btn.classList.add('sub-active');
+    document.getElementById('sub-'+btn.dataset.sub).classList.add('sub-active');
+    await refreshAll();
+    if(btn.dataset.sub==='skills') renderSkillsMatrix();
+    if(btn.dataset.sub==='games') renderAdminGamesList();
+    if(btn.dataset.sub==='assign') populateAssignGameSelect();
+    if(btn.dataset.sub==='roster') renderAdminRoster();
+    if(btn.dataset.sub==='positions') renderAdminPositions();
+  };
+});
+
+/* ---------------- NAV ---------------- */
+document.querySelectorAll('nav button').forEach(btn=>{
+  btn.onclick=async ()=>{
+    document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('view-'+btn.dataset.view).classList.add('active');
+    await refreshAll();
+    if(btn.dataset.view==='schedule') renderPublicSchedule();
+    if(btn.dataset.view==='availability' && currentAvailUser) renderAvailGames();
+    if(btn.dataset.view==='admin' && currentAdminUser){
+      renderAdminGamesList(); renderAdminRoster(); renderAdminPositions(); populateAssignGameSelect();
+    }
+    if(!currentAvailUser && !currentAdminUser) populateLoginSelects();
+  };
+});
+
+init();
+</script>
+</body>
+</html>
