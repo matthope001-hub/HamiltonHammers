@@ -891,17 +891,26 @@ async function renderAssignBody(gameId){
   html += `</tbody></table><table style="margin-top:14px;"><thead><tr><th>Position</th><th>Assign</th></tr></thead><tbody>`;
   html += roster.positions.map(p=>{
     const currentPick = data.assignments[p] || '';
-    return `<tr><td>${esc(p)}</td><td><select class="assign-select" data-pos="${esc(p)}" data-current="${esc(currentPick)}"></select></td></tr>`;
+    return `<tr><td>${esc(p)}</td><td><select class="assign-select" data-pos="${esc(p)}">${buildAssignOptions(p,currentPick)}</select></td></tr>`;
   }).join('');
   html += `</tbody></table>`;
   body.innerHTML=html;
   body.dataset.game=gameId;
 
   body.querySelectorAll('select.assign-select').forEach(sel=>{
-    sel.value = sel.dataset.current;
     sel.addEventListener('change', refreshAssignDropdowns);
   });
   refreshAssignDropdowns();
+}
+
+function buildAssignOptions(pos,currentValue){
+  const eligible = assignEligibleByPos[pos] || [];
+  const opts = eligible.map(o=>{
+    const mark = assignAvailabilityMap[o.id]==='yes' ? ' ✓' : '';
+    const forced = o.forced ? ' (not eligible)' : '';
+    return `<option value="${o.id}" ${o.id===currentValue?'selected':''}>${esc(o.name)}${mark}${forced}</option>`;
+  }).join('');
+  return `<option value="">— Unassigned —</option>${opts}`;
 }
 
 function refreshAssignDropdowns(){
