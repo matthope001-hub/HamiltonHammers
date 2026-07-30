@@ -356,7 +356,7 @@ async function loadAll(){
     sb('positions?select=*&order=sort_order.asc'),
     sb('games?select=*&order=game_date.asc,game_time.asc')
   ]);
-  roster.officials = officialRows.map(o=>({id:o.id,name:o.name,pin:o.pin,role:o.role,skills:o.skills||[]}));
+  roster.officials = officialRows.map(o=>({id:o.id,name:o.name,pin:o.pin,role:o.role,skills:o.skills||[],hidden:!!o.hidden}));
   roster.positions = positionRows.map(p=>p.name);
   positionIdByName = {};
   positionRows.forEach(p=>positionIdByName[p.name]=p.id);
@@ -405,7 +405,7 @@ function nextHomeGame(){
 function renderScoreboard(){
   const board=document.getElementById('scoreboard');
   const ng=nextHomeGame();
-  const officialCount=roster.officials.length;
+  const officialCount=crewOfficials().length;
   board.innerHTML = `
     <div class="cell"><div class="label">Next Home Game</div><div class="value">${ng? fmtDate(ng.date)+' · '+ng.time : '— none scheduled —'}</div></div>
     <div class="cell"><div class="label">Opponent</div><div class="value">${ng? esc(ng.opponent||'TBD') : '—'}</div></div>
@@ -441,6 +441,7 @@ function monthLabel(d){
 }
 function esc(s){ return (s||'').replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c])); }
 function nameById(id){ const o=roster.officials.find(x=>x.id===id); return o? o.name : null; }
+function crewOfficials(){ return roster.officials.filter(o=>!o.hidden); }
 
 /* ---------------- PUBLIC SCHEDULE ---------------- */
 async function renderPublicSchedule(){
@@ -465,7 +466,7 @@ async function renderPublicSchedule(){
     for(const g of m.games){
       const data = await fetchGameData(g.id);
       const available=[], unavailable=[];
-      for(const o of roster.officials){
+      for(const o of crewOfficials()){
         const status = data.availability[o.id];
         if(status==='yes') available.push(o.name);
         else if(status==='no') unavailable.push(o.name);
@@ -506,7 +507,7 @@ async function renderPublicSchedule(){
 
 /* ---------------- LOGIN SELECTS ---------------- */
 function populateLoginSelects(){
-  const officials = [...roster.officials].sort((a,b)=>a.name.localeCompare(b.name));
+  const officials = crewOfficials().sort((a,b)=>a.name.localeCompare(b.name));
   const admins = roster.officials.filter(o=>o.role==='admin').sort((a,b)=>a.name.localeCompare(b.name));
   document.getElementById('avail-name').innerHTML = officials.map(o=>`<option value="${o.id}">${esc(o.name)}</option>`).join('') || '<option>No officials yet — ask an admin</option>';
   document.getElementById('admin-name').innerHTML = admins.map(o=>`<option value="${o.id}">${esc(o.name)}</option>`).join('') || '<option>No admins yet</option>';
@@ -728,6 +729,9 @@ function renderAdminRoster(){
           <option value="official" ${o.role!=='admin'?'selected':''}>Official</option>
           <option value="admin" ${o.role==='admin'?'selected':''}>Admin</option>
         </select>
+        <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--ice-dim);white-space:nowrap;">
+          <input type="checkbox" class="edit-off-hidden" ${o.hidden?'checked':''} style="width:auto;"> Hidden from crew
+        </label>
       </div>
       <button class="btn small" onclick="saveOfficialEdit('${o.id}')">Save</button>
       <button class="btn danger small" onclick="removeOfficial('${o.id}')">Remove</button>
@@ -738,8 +742,9 @@ async function saveOfficialEdit(id){
   const name=row.querySelector('.edit-off-name').value.trim();
   const pin=row.querySelector('.edit-off-pin').value.trim();
   const role=row.querySelector('.edit-off-role').value;
+  const hidden=row.querySelector('.edit-off-hidden').checked;
   if(!name || !/^\d{4,6}$/.test(pin)){ alert('Enter a name and a 4–6 digit PIN.'); return; }
-  await sb(`officials?id=eq.${id}`,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({name,pin,role})});
+  await sb(`officials?id=eq.${id}`,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({name,pin,role,hidden})});
   await refreshAll();
   renderAdminRoster(); populateLoginSelects(); renderScoreboard(); renderSkillsMatrix();
 }
@@ -765,7 +770,7 @@ async function renderSkillsMatrix(){
   const wrap=document.getElementById('skills-matrix-wrap');
   wrap.innerHTML='<div class="empty">Loading…</div>';
   await refreshAll();
-  const officials=[...roster.officials].sort((a,b)=>a.name.localeCompare(b.name));
+  const officials=crewOfficials().sort((a,b)=>a.name.localeCompare(b.name));
   if(!officials.length){ wrap.innerHTML='<div class="empty">No officials on roster yet. Add people in the Roster / Profiles tab first.</div>'; return; }
   if(!roster.positions.length){ wrap.innerHTML='<div class="empty">Add positions first.</div>'; return; }
   let html='<div class="matrix-wrap"><table class="matrix"><thead><tr><th class="who" style="text-align:left;">Official</th>';
@@ -837,7 +842,7 @@ async function renderAssignBody(gameId){
   const body=document.getElementById('assign-body');
   if(!gameId){ body.innerHTML='<div class="empty">Add a game first.</div>'; return; }
   const data = await fetchGameData(gameId);
-  const officials = [...roster.officials].sort((a,b)=>a.name.localeCompare(b.name));
+  const officials = crewOfficials().sort((a,b)=>a.name.localeCompare(b.name));
   const availLabel = id => ({yes:'<span class="tag yes">Available</span>',no:'<span class="tag no">Not Available</span>'}[data.availability[id]] || '<span class="muted">No response</span>');
 
   assignAvailabilityMap = data.availability;
