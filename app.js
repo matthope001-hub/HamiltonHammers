@@ -256,6 +256,7 @@ document.getElementById('avail-login-btn').onclick = async ()=>{
   if(o.role!=='admin' && document.getElementById('view-admin').classList.contains('active')){
     document.querySelector('nav button[data-view="schedule"]').click();
   }
+  await renderMyAssignments();
   await renderAvailGames();
 };
 document.getElementById('avail-logout').onclick=()=>{
@@ -268,6 +269,30 @@ document.getElementById('avail-logout').onclick=()=>{
   document.getElementById('admin-pin').value='';
   document.getElementById('nav-admin-btn').style.display='none';
 };
+
+async function renderMyAssignments(){
+  const el=document.getElementById('my-assignments');
+  el.innerHTML='<div class="empty">Loading…</div>';
+  const upcoming = sortedGames().filter(g=> new Date(g.date+'T'+(g.time||'00:00')) >= new Date());
+  const upcomingIds = new Set(upcoming.map(g=>g.id));
+  const rows = await sb(`assignments?official_id=eq.${currentAvailUser.id}&select=game_id,position_name`);
+  const mine = rows.filter(r=>upcomingIds.has(r.game_id));
+  if(!mine.length){ el.innerHTML='<div class="empty">Nothing scheduled yet — check back once the admin sets positions.</div>'; return; }
+
+  const byGame={};
+  mine.forEach(r=>{ (byGame[r.game_id]=byGame[r.game_id]||[]).push(r.position_name); });
+  const rowsSorted = Object.entries(byGame)
+    .map(([gameId,positions])=>({game:upcoming.find(g=>g.id===gameId),positions}))
+    .filter(r=>r.game)
+    .sort((a,b)=> new Date(a.game.date+'T'+(a.game.time||'00:00')) - new Date(b.game.date+'T'+(b.game.time||'00:00')));
+
+  el.innerHTML = `<table><thead><tr><th>Game</th><th>Position(s)</th></tr></thead><tbody>
+    ${rowsSorted.map(r=>`<tr>
+      <td>${teamBadge(r.game.opponent)}vs ${esc(r.game.opponent||'TBD')} <span class="muted mono">— ${fmtDate(r.game.date)} · ${r.game.time||''}</span></td>
+      <td>${r.positions.map(esc).join(', ')}</td>
+    </tr>`).join('')}
+  </tbody></table>`;
+}
 
 async function renderAvailGames(){
   const el=document.getElementById('avail-games');
@@ -697,7 +722,7 @@ document.querySelectorAll('nav button').forEach(btn=>{
     document.getElementById('view-'+btn.dataset.view).classList.add('active');
     await refreshAll();
     if(btn.dataset.view==='schedule') renderPublicSchedule();
-    if(btn.dataset.view==='availability' && currentAvailUser) renderAvailGames();
+    if(btn.dataset.view==='availability' && currentAvailUser){ renderMyAssignments(); renderAvailGames(); }
     if(btn.dataset.view==='admin' && currentAdminUser){
       renderAdminGamesList(); renderAdminRoster(); renderAdminPositions(); populateAssignGameSelect();
     }
