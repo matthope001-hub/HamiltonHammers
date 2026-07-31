@@ -467,9 +467,9 @@ function renderAdminGamesList(){
   el.innerHTML=list.map(g=>`
     <div class="list-row" data-game="${g.id}">
       <div class="row" style="flex:1;align-items:center;">
-        <input type="date" class="edit-date" value="${g.date}" style="max-width:150px;">
-        <input type="time" class="edit-time" value="${g.time||''}" style="max-width:110px;">
-        <input type="text" class="edit-opp" value="${esc(g.opponent||'')}" placeholder="Opponent" style="flex:1;min-width:160px;">
+        <input type="date" class="edit-date" value="${g.date}">
+        <input type="time" class="edit-time" value="${g.time||''}">
+        <input type="text" class="edit-opp" value="${esc(g.opponent||'')}" placeholder="Opponent">
       </div>
       <button class="btn small" onclick="saveGameEdit('${g.id}')">Save</button>
       <button class="btn danger small" onclick="removeGame('${g.id}')">Remove</button>
@@ -510,14 +510,14 @@ function renderAdminRoster(){
   el.innerHTML=sorted.map(o=>`
     <div class="list-row" data-official="${o.id}">
       <div class="row" style="flex:1;align-items:center;">
-        <input type="text" class="edit-off-name" value="${esc(o.name)}" style="min-width:140px;">
-        <input type="text" class="edit-off-pin" value="${esc(o.pin)}" style="max-width:100px;">
-        <select class="edit-off-role" style="max-width:120px;">
+        <input type="text" class="edit-off-name" value="${esc(o.name)}">
+        <input type="text" class="edit-off-pin" value="${esc(o.pin)}">
+        <select class="edit-off-role">
           <option value="official" ${o.role!=='admin'?'selected':''}>Official</option>
           <option value="admin" ${o.role==='admin'?'selected':''}>Admin</option>
         </select>
         <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--ice-dim);white-space:nowrap;">
-          <input type="checkbox" class="edit-off-hidden" ${o.hidden?'checked':''} style="width:auto;"> Hidden from crew
+          <input type="checkbox" class="edit-off-hidden" ${o.hidden?'checked':''}> Hidden from crew
         </label>
       </div>
       <button class="btn small" onclick="saveOfficialEdit('${o.id}')">Save</button>
@@ -546,6 +546,17 @@ document.getElementById('add-off-btn').onclick=async ()=>{
   renderAdminRoster(); populateLoginSelects(); renderScoreboard(); renderSkillsMatrix();
 };
 async function removeOfficial(id){
+  await refreshAll();
+  const person = roster.officials.find(o=>o.id===id);
+  const assigned = await sb(`assignments?official_id=eq.${id}&select=position_name,game_id`);
+  if(assigned.length){
+    const details = assigned.map(a=>{
+      const g = games.find(x=>x.id===a.game_id);
+      return g ? `• ${fmtDate(g.date)} vs ${g.opponent||'TBD'} — ${a.position_name}` : `• ${a.position_name}`;
+    });
+    alert(`Can't remove ${person?person.name:'this person'} — they're still assigned to:\n\n${details.join('\n')}\n\nClear these assignments first (Admin → Assignments), then try removing them again.`);
+    return;
+  }
   if(!confirm('Remove this person from the roster?')) return;
   await sb(`officials?id=eq.${id}`,{method:'DELETE',headers:{'Prefer':'return=minimal'}});
   await refreshAll();
@@ -607,6 +618,17 @@ async function renamePosition(oldName,val){
   renderPublicSchedule(); populateAssignGameSelect();
 }
 async function removePosition(name){
+  await refreshAll();
+  const assigned = await sb(`assignments?position_name=eq.${encodeURIComponent(name)}&select=game_id,official_id`);
+  if(assigned.length){
+    const details = assigned.map(a=>{
+      const g = games.find(x=>x.id===a.game_id);
+      const person = nameById(a.official_id) || 'someone';
+      return g ? `• ${fmtDate(g.date)} vs ${g.opponent||'TBD'} — ${person}` : `• ${person}`;
+    });
+    alert(`Can't remove "${name}" — it's still filled at:\n\n${details.join('\n')}\n\nClear these assignments first (Admin → Assignments), then try removing the position again.`);
+    return;
+  }
   if(!confirm('Remove this position?')) return;
   const id=positionIdByName[name];
   await sb(`positions?id=eq.${id}`,{method:'DELETE',headers:{'Prefer':'return=minimal'}});
