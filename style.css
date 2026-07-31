@@ -185,3 +185,49 @@ select.assign-select{width:100%;}
 .pin-modal .status-msg{min-height:16px;margin-top:8px;}
 .pin-modal-actions{display:flex;gap:10px;margin-top:16px;}
 .pin-modal-actions .btn{flex:1;}
+
+.edit-date{max-width:150px;}
+.edit-time{max-width:110px;}
+.edit-opp{flex:1;min-width:160px;}
+.edit-off-name{min-width:140px;}
+.edit-off-pin{max-width:100px;}
+.edit-off-role{max-width:120px;}
+.edit-off-hidden{width:auto;}
+
+/* ---- mobile ---- */
+@media (max-width:640px){
+  header{padding:16px 16px 14px;}
+  .brand-name{font-size:20px;}
+  .brand-icon{width:28px;height:28px;}
+  .brand-sub{font-size:10px;}
+  .board{gap:16px;padding:12px 14px;}
+  .board .value{font-size:16px;}
+
+  nav{padding:10px 12px 0;overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;}
+  nav button{padding:9px 12px;font-size:13px;white-space:nowrap;flex-shrink:0;}
+
+  main{padding:18px 12px 60px;}
+  .card{padding:14px 14px;}
+  .card h2{font-size:16px;}
+
+  .subnav,.avail-subnav{overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;}
+  .subnav button,.avail-subnav button{padding:8px 11px;font-size:12px;white-space:nowrap;flex-shrink:0;}
+
+  table{font-size:13px;}
+  th,td{padding:7px 6px;}
+
+  .row>.field{min-width:100%;}
+  .edit-date,.edit-time,.edit-opp,.edit-off-name,.edit-off-pin,.edit-off-role{max-width:none;width:100%;}
+
+  button.btn{padding:11px 16px;min-height:40px;}
+  button.btn.small{padding:9px 14px;font-size:12px;min-height:36px;}
+
+  .avail-choices{gap:6px;}
+  .avail-choices label{padding:9px 12px;flex:1;justify-content:center;}
+
+  .who-bar,.list-row{gap:10px;}
+  .login-box{margin:24px auto;max-width:100%;}
+  .pin-modal{padding:22px 18px;}
+
+  table.matrix th.pos-col{font-size:9px;}
+}
